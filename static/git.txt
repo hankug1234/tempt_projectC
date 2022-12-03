@@ -1,0 +1,22 @@
+git init diractory name :repository 생성
+git init : 현재 path 에 git repository 생성 
+
+cat >> filename : file에 내용 기입 
+cat filename : file 내용 출력
+mkdir diractory name : directory 생성 
+
+git log : commit 기록 확인 
+git state : git 현재 state 확인 
+git reset head head commit 내용 복원 
+git reset -hard commit code : 해당 commit log 기록 복원 이전 기록은 삭제됨 
+git revert commit code : 해당 commit log 기록 복원 이전 기록 유지 
+
+git check out : head 의 기록 으로 현재 파일 덮어 씀 
+
+pwd : 현재 path 확인 
+
+git checkout branch : 해당 브렌치로 변경 
+git branch branch name : 브렌치 생성
+git log --oneline --branches --grahp
+
+ls -al 

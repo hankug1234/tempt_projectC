@@ -1,0 +1,6 @@
+config/*
+resource/yolo*
+resource/cartype_model_B4_data5vs5.h5
+resource/EFN*
+test_data
+venv
