@@ -2,7 +2,9 @@ from sqlalchemy import Column, Float
 from sqlalchemy import ForeignKey
 from sqlalchemy import Integer
 from sqlalchemy import String
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
+
+
 #from connections import Engine
 
 def makeClientsTable(base):
@@ -11,7 +13,7 @@ def makeClientsTable(base):
         id = Column(String(50),primary_key=True)
         pw = Column(String(50))
 
-        video = relationship("Video",back_populates="client")
+        video = relationship("Video",back_populates="client",cascade="all, delete-orphan")
 
         def asDict(self):
             return self.__dict__
@@ -25,10 +27,12 @@ def makeVideosTable(base,clientId_):
         id = Column(Integer,primary_key=True,autoincrement=True)
         videoName = Column(String(100))
         videoDirectory = Column(String(300))
-        clientId = Column(String(50),ForeignKey("clients.id"))
+        clientId = Column(String(50),ForeignKey("clients.id",ondelete='CASCADE'))
+        fps = Column(Float)
+        totalFrame = Column(Float)
 
         client = relationship("Client",back_populates="video")
-        object = relationship("Object",back_populates="video")
+        object = relationship("Object",back_populates="video",cascade="all, delete-orphan")
 
         def asDict(self):
             return self.__dict__
@@ -45,10 +49,11 @@ def makeObjectsTable(base,clientId):
         startFrame = Column(Integer)
         endFrame = Column(Integer)
         prob = Column(Float)
-        videoId = Column(Integer,ForeignKey(f"{clientId}_videos.id"),primary_key=True)
+        videoId = Column(Integer,ForeignKey(f"{clientId}_videos.id",ondelete='CASCADE'),primary_key=True)
 
         video = relationship("Video",back_populates="object")
-        objectFrameData = relationship("ObjectFrameData",back_populates="object")
+        objectFrameData = relationship("ObjectFrameData",back_populates="object",cascade="all, delete-orphan")
+        #objectFrameDataVideoId = relationship("ObjectFrameData", back_populates="objectVideoId", cascade="all, delete-orphan")
 
         def asDict(self):
             return self.__dict__
@@ -60,9 +65,9 @@ def makeObjectsTable(base,clientId):
 def makeObjectFrameDatasTable(base,clientId):
     class ObjectFrameData(base):
         __tablename__ = f"{clientId}_objectFrameDatas"
-        objectId = Column(Integer,ForeignKey(f"{clientId}_objects.id"),primary_key=True)
+        objectId = Column(Integer,primary_key=True)
         frameNum = Column(Integer,primary_key=True)
-        videoId = Column(Integer,ForeignKey(f"{clientId}_videos.id"),primary_key=True)
+        videoId = Column(Integer,ForeignKey(f"{clientId}_objects.id", ondelete='CASCADE'),primary_key=True)
         x1 = Column(Integer)
         x2 = Column(Integer)
         y1 = Column(Integer)

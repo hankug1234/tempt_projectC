@@ -8,10 +8,10 @@ import glob
 
 #color_list = glob.glob("D:/ai/color_recognition/src/training_dataset/*")
 #color_list_0 = glob.glob(color_list[0]+"/*")
-model = tf.keras.models.load_model("resource/car_color_model.h5")
-label = ['beige','black','blue','brown','gold',	'green','grey','orange','pink','purple','red','silver','tan','white','yellow']
-label_color = ['beige', 'black', 'blue', 'brown', 'red', 'silver', 'white', 'yellow' ]
-d_b={0: 'black',1:'blue',2:'cyan',3:'gray',4:'green',5:'red',6:'white',7:'yellow'}
+#model = tf.keras.models.load_model("resource/car_color_model.h5")
+#label = ['beige','black','blue','brown','gold',	'green','grey','orange','pink','purple','red','silver','tan','white','yellow']
+#label_color = ['beige', 'black', 'blue', 'brown', 'red', 'silver', 'white', 'yellow' ]
+#d_b={0: 'black',1:'blue',2:'cyan',3:'gray',4:'green',5:'red',6:'white',7:'yellow'}
 """
 for color in color_list_0:
     img = cv2.imread(color)
@@ -21,7 +21,7 @@ for color in color_list_0:
 """
 
 
-
+"""
 yoloFactory = YoloFactory("./resource","yolov5l.pth") # make yolov5 model factory class input: (directory path, model name)
 detector = yoloFactory.getModel()
 tracker = Sort()
@@ -54,3 +54,36 @@ while video.isOpened():
     cv2.imshow("car_video_test", frame)
 
 video.release()
+"""
+
+def readVideoRange(path,start,end):
+    video = cv2.VideoCapture(path)
+    video.set(cv2.CAP_PROP_POS_FRAMES,start)
+    for i in range(end-start+1):
+        ret, frame = video.read()
+        if not ret:
+            print("error occure")
+            break
+        yield frame
+    video.release()
+
+def test(path,byte1,byte2):
+    result = []
+    for frame in readVideoRange(path, 50, 100):
+        ret, buffer = cv2.imencode('.mp4', frame)
+        result.append(buffer.tobytes())
+
+    result = b"".join(result)
+    file_size = len(result)
+
+    start = 0
+    if byte1 < file_size:
+        start = byte1
+    if byte2:
+        length = byte2 + 1 - byte1
+    else:
+        length = file_size - start
+
+    return result[start:length]
+
+print(test("D:/pythonProjectC/test_data/longvideo.mp4",50,100))

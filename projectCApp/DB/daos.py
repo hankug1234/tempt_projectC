@@ -172,3 +172,16 @@ class LoginDao(ClientDao):
         self.engine = Engine().getConnection()
         self.ClientsDao = ClientDao(BasicDao(self.Client,self.engine))
         super().__init__(BasicDao(self.Client,self.engine))
+
+
+#db = ClientDB("hankug")
+#video = db.getVideoDao()
+#object = db.getObjectDao()
+#frame = db.getObjectFrameDataDao()
+
+#video.insert([db.Video(id=1,videoName="test1",videoDirectory="test/",clientId="hankug",fps=0.0,totalFrame=0.0)])
+#video.insert([db.Video(videoName="test2",videoDirectory="test/",clientId="hankug",fps=0.0,totalFrame=0.0)])
+#object.insert([db.Object(id=1,videoId=1),db.Object(id=1,videoId=2),db.Object(id=2,videoId=1)])
+#frame.insert([db.ObjectFrameData(objectId=1,frameNum=1,videoId=1),db.ObjectFrameData(objectId=1,frameNum=1,videoId=2)])
+#video.delete(1)
+#object.delete(2)

@@ -42,10 +42,13 @@ class TubeDataManager:
         secure_name = sha1+secure_filename(request.files['file'].filename)
         savePath = os.path.join(clientVideosDirectory,secure_name)
         videoDao = clientDB.getVideoDao()
-        videoDao.insert([clientDB.Video(videoName=request.files['file'].filename,videoDirectory=savePath,clientId=clientId)])
 
         f = request.files['file']
         f.save(savePath)
+        video = cv2.VideoCapture()
+        fps, f_count = video.get(cv2.CAP_PROP_FPS), video.get(cv2.CAP_PROP_FRAME_COUNT)
+        videoDao.insert([clientDB.Video(fps = fps,totalFrame=f_count,videoName=request.files['file'].filename, videoDirectory=savePath, clientId=clientId)])
+        video.release()
         return 'file uploaded successfully'
 
     def fileSender(self,videoId,clientDB):
@@ -63,7 +66,7 @@ class TubeDataManager:
 
     def readVideoRange(self,path,start,end):
         video = cv2.VideoCapture(path)
-        video.set(2,start)
+        video.set(cv2.CAP_PROP_POS_FRAMES,start)
         for i in range(end-start+1):
             ret, frame = video.read()
             if not ret:
@@ -72,49 +75,3 @@ class TubeDataManager:
             yield frame
         video.release()
 
-    def dumpBBOX(self,path,start,end,bbox):
-        count = 0
-        for frame in self.readVideoRange(path,start,end):
-            loc = bbox[start+count]
-            count+=1
-            bboxImg = cv2.rectangle(frame,(loc["x1"],loc["y1"]),(loc["x2"],loc["y2"]),(0,255,0),3)
-
-    @staticmethod
-    def streamVideo(path):
-        video = cv2.VideoCapture(path)
-        while True:
-            ret, frame = video.read()
-            if not ret:
-                break
-            else:
-                ret, buffer = cv2.imencode('.mp4', frame)
-                frame = buffer.tobytes()
-                yield (b'--frame\r\n' b'Content-Type: video/mp4\r\n\r\n' + frame + b'\r\n')
-
-    @staticmethod
-    def get_chunk(filename, byte1=None, byte2=None):
-        filesize = os.path.getsize(filename)
-        yielded = 0
-        yield_size = 1024 * 1024
-
-        if byte1 is not None:
-            if not byte2:
-                byte2 = filesize
-            yielded = byte1
-            filesize = byte2
-
-        with open(filename, 'rb') as f:
-            content = f.read()
-
-        while True:
-            remaining = filesize - yielded
-            if yielded == filesize:
-                break
-            if remaining >= yield_size:
-                yield content[yielded:yielded + yield_size]
-                yielded += yield_size
-            else:
-                yield content[yielded:yielded + remaining]
-                yielded += remaining
-
-#return Response(gen(Camera()),mimetype='multipart/x-mixed-replace; boundary=frame')

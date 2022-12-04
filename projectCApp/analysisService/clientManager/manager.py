@@ -30,3 +30,7 @@ class ClientManager:
     def updateClient(self,data):
         self.LoginDao.update(data)
         return True
+
+#ClientDB("hankug").createClientTables()
+#manager = ClientManager()
+#manager.makeNewClient("hankug","12345")

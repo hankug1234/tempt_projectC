@@ -57,14 +57,14 @@ class AnalysisCore():
                     self.objectImage[obj[-2]] = frame[obj[1]:obj[3], obj[0]:obj[2]]
 
             except KeyError:
-                self.objects[obj[-2]] = []
+                self.objects[obj[-2]] = [obj]
                 self.objectsProb[obj[-2]] = prob
                 self.objectImage[obj[-2]] = frame[obj[1]:obj[3],obj[0]:obj[2]]
 
         return outputs
 
     #condition = {color:[model,dsize],shape:[model,dsize]}
-    def excuteAnalysis(self,videoPath,condition,betchSize=10):
+    def excuteAnalysis(self,videoPath,condition,betchSize=None):
         video = cv2.VideoCapture(videoPath)
         if video.isOpened():
             fps,f_count = video.get(cv2.CAP_PROP_FPS),video.get(cv2.CAP_PROP_FRAME_COUNT)
@@ -73,7 +73,7 @@ class AnalysisCore():
             if betchSize != None:
                 f_count = betchSize
 
-            for _ in range(f_count):
+            for _ in range(int(f_count)):
                 _,frame = video.read()
                 self.excuteTracking(frame)
 

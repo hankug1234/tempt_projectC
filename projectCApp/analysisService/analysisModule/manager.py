@@ -30,7 +30,7 @@ class AnalysisManger():
         results = self.analysisCore.getAnalysisResults()
 
         if len(results) == 0:
-            objects = self.analysisCore.getObjectsProb
+            objects = self.analysisCore.getObjectsProb()
             for key in objects.keys():
                 self.matchedIdDict[key] = {}
 
@@ -79,7 +79,7 @@ class AnalysisManger():
                                                           ,y1=data["y1"],x2=data["x2"],y2=data["y2"])
                 objectFrameDatas.append(framedata)
         self.objectDao.insert(objectList)
-        self.objectDataFrameDao.insert(objectFrameDatas)
+        self.objectFrameDataDao.insert(objectFrameDatas)
 
     def putAnalysisData(self,videoPath,videoId,condition):
         self.executeAnalysis(videoPath,condition)
@@ -122,13 +122,16 @@ class AnalysisManger():
 
 
     def deleteAnalysis(self,videoId):
+        self.objectFrameDataDao.deleteVideoId(videoId)
         self.objectDao.delete(videoId)
-        self.objectDataFrameDao.deleteVideoId(videoId)
+
 
     def updateAnalysis(self,videoPath,videoId,condition):
         self.deleteAnalysis(videoId)
-        self.execute(videoPath,videoId,condition)
+        self.putAnalysisData(videoPath,videoId,condition)
 
     def deleteAllAnalysis(self):
+        self.objectFrameDataDao.deleteAll()
         self.objectDao.deleteAll()
-        self.objectDataFrameDao.deleteAll()
+
+
