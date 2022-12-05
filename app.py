@@ -1,11 +1,13 @@
 import os
 import re
 import cv2
+import json
 from flask import Flask, request, Response, render_template
 from flask_restx import Api, Resource
 from projectCApp.DB.daos import ClientDB
 from projectCApp.analysisService.analysisModule.manager import AnalysisManger
 from projectCApp.analysisService.tubeDataManager.manager import TubeDataManager
+
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = "./userVideos"
 app.config['MAX_CONTENT_PATH'] = 1024*1024*1024

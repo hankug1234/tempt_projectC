@@ -86,4 +86,5 @@ def test(path,byte1,byte2):
 
     return result[start:length]
 
-print(test("D:/pythonProjectC/test_data/longvideo.mp4",50,100))
+video = cv2.VideoCapture("D:/pythonProjectC/test_data/carVideo.mp4")
+print(video.get(cv2.CAP_PROP_FRAME_WIDTH),video.get(cv2.CAP_PROP_FRAME_HEIGHT))
