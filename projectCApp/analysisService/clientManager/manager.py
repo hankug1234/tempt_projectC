@@ -31,6 +31,13 @@ class ClientManager:
         self.LoginDao.update(data)
         return True
 
+    def selectPassword(self,clientId):
+        client = self.LoginDao.select(clientId)[0]
+        return client.pw
+
+
+
+
 #ClientDB("hankug").createClientTables()
 #manager = ClientManager()
 #manager.makeNewClient("hankug","12345")

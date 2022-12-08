@@ -1,37 +1,129 @@
 import os
 import re
-import cv2
-import json
-from flask import Flask, request, Response, render_template
+from flask import Flask, request, Response, render_template, redirect
 from flask_restx import Api, Resource
+
+from SORT.sort import Sort
 from projectCApp.DB.daos import ClientDB
+from projectCApp.analysisService.analysisModule.analysis import AnalysisCore
 from projectCApp.analysisService.analysisModule.manager import AnalysisManger
 from projectCApp.analysisService.tubeDataManager.manager import TubeDataManager
+from projectCApp.analysisService.clientManager.manager import ClientManager
+from resource.modelFactory import YoloFactory
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = "./userVideos"
 app.config['MAX_CONTENT_PATH'] = 1024*1024*1024
 api = Api(app)
 
-@api.route('/analysis-data/<string:clientId>/<int:videoId>/')
-class DataManager(Resource):
-    def get(self,clientId,videoId):
+label_shape = ['Van', 'bus', 'compact', 'sedan', 'suv', 'truck']
+label_color = ['beige', 'black', 'blue', 'brown', 'red', 'silver', 'white', 'yellow' ]
+label = "car"
+label_num = 2
+
+yoloFactory = YoloFactory("./resource","yolov5l.pth") # make yolov5 model factory class input: (directory path, model name)
+model = yoloFactory.getModel() # get yolov5 model object
+#colors = tf.keras.models.load_model('resource/EFN-model.best.h5')
+#shapes = tf.keras.models.load_model("resource/cartype_model_B4_data5vs5.h5")
+tracker = Sort() # tracker object use SORT
+
+analysisCore = AnalysisCore(tracker,model,label_num) # do tracking and collect analysis data
+
+#conditionDict = {"shape":[shapes,(300,300)],"color":[colors,(224,224)]}
+conditionLables = {"shape":label_shape,"color":label_color}
+
+@api.route("/videoList/<string:clientId>")
+class ShowVideoList(Resource):
+    def get(self,clientId):
         client = ClientDB(clientId)
-        analysisManager = AnalysisManger(clientDB=client)
-        result = analysisManager.selectAnalysisData(videoId)
+        manager = TubeDataManager()
+        result = manager.selectVideosInfo(client)
         return result
 
-@api.route('/upload_file')
-class UploadFile(Resource):
+
+@api.route('/signUp/')
+class SignUpManager(Resource):
+    def get(self):
+        parameters = request.args.to_dict()
+        clientId = parameters["clientId"]
+        clientManager = ClientManager()
+        result = clientManager.checkDuplicated(clientId)
+        return {"result":result}
+
     def post(self):
-        client = ClientDB("hankug")
+        clientId = request.form["clientId"]
+        clientPw = request.form["clientPw"]
+        clientManager = ClientManager()
+        clientManager.makeNewClient(clientId,clientPw)
+        return {"result": True}
+
+@api.route('/signIn/')
+class SignInManager(Resource):
+    def post(self):
+        clientId = request.form["clientId"]
+        clientPw = request.form["clientPw"]
+        clientManager = ClientManager()
+        check = clientManager.checkDuplicated(clientId)
+        if check:
+            pw = clientManager.selectPassword(clientId)
+            if clientPw == pw:
+                return {"result":True}
+        return {"result":False}
+
+
+
+
+@api.route('/getObjectsInfo/<string:clientId>/<int:videoId>/')
+class ObjectsManager(Resource):
+    def get(self,clientId,videoId):
+        client = ClientDB(clientId)
+        tubeDataManager = TubeDataManager()
+        analysisManager = AnalysisManger(clientDB=client)
+        videoInfo = tubeDataManager.selectVideoInfo(videoId,client)
+        result = analysisManager.selectAnalysisData(videoId)
+        result["info"] = videoInfo
+        return result
+
+@api.route('/getVideosInfo/<string:clientId>/')
+class VideosManager(Resource):
+    def get(self,clientId):
+        clientDB = ClientDB(clientId)
+        tubeDataManager = TubeDataManager()
+        result = tubeDataManager.selectVideosInfo(clientDB)
+        return result
+
+
+@api.route('/file/<string:clientId>')
+class UploadFile(Resource):
+    def post(self,clientId):
+        client = ClientDB(clientId)
         manager = TubeDataManager()
         return manager.fileSaver(client)
 
-    def get(self):
-        client = ClientDB("hankug")
+@api.route('/file/<string:clientId>/<int:videoId>')
+class DownLoadFile(Resource):
+
+    def get(self,clientId,videoId):
+        client = ClientDB(clientId)
         manager = TubeDataManager()
-        return manager.fileSender(4,client)
+        return manager.fileSender(videoId,client)
+
+@api.route('/execute/<string:clientId>/<int:videoId>')
+class DoAnalysis(Resource):
+    def post(self,clientId,videoId):
+        cars = request.form["cars"]
+        colors = request.form["colors"]
+        condition = [{"shapes":cars},{"colors":colors}]
+
+        client = ClientDB(clientId)
+        analysisManager = AnalysisManger(client, analysisCore, {}, conditionLables)
+        tubeDataManager = TubeDataManager()
+        videoInfo = tubeDataManager.selectVideoInfo(videoId, client)
+        analysisManager.updateAnalysis(videoInfo["videoDirectory"], videoId, condition)
+
+        return redirect(request.referrer+f"/file/show?videoId={videoId}")
+
+
 
 @app.route('/show')
 def index():
@@ -40,68 +132,10 @@ def index():
     data = manager.selectAnalysisData2(1)
     return render_template('4page2.html',data=data)
 
-@app.route("/video_show")
-def video():
-    return Response(TubeDataManager.streamVideo("D:/pythonProjectC/test_data/carVideo.mp4"),mimetype="video/mp4")
-
-
 @app.after_request
 def after_request(response):
     response.headers.add('Accept-Ranges', 'bytes')
     return response
-
-
-def readVideoRange(path,start,end):
-    video = cv2.VideoCapture(path)
-    video.set(2,start)
-    for i in range(end-start+1):
-        ret, frame = video.read()
-        if not ret:
-            print("error occure")
-            break
-        yield frame
-    video.release()
-
-def test(path,byte1,byte2):
-    result = []
-    for frame in readVideoRange(path, 50, 100):
-        ret, buffer = cv2.imencode('.mp4', frame)
-        result.append(buffer.tobytes())
-
-    result = b"".join(result)
-    file_size = len(result)
-
-    start = 0
-    if byte1 < file_size:
-        start = byte1
-    if byte2:
-        length = byte2 + 1 - byte1
-    else:
-        length = file_size - start
-
-
-    return result[start:length],start,length, file_size
-
-
-def dumpBBOX(path,start,end,bbox):
-    count = 0
-    result = []
-    for frame in readVideoRange(path,start,end):
-        loc = bbox[start+count]
-        count+=1
-        bboxImg = cv2.rectangle(frame,(loc["x1"],loc["y1"]),(loc["x2"],loc["y2"]),(0,255,0),3)
-        ret, buffer = cv2.imencode('.mp4', bboxImg)
-        result.append(buffer.tobytes())
-    return b"".join(result)
-
-def bboxVideo(videoId,objectId,clientDB):
-    path = TubeDataManager().getVideoPath(videoId,clientDB)
-    manager = AnalysisManger(clientDB=clientDB)
-    video = manager.selectAnalysisData(videoId)
-    obj = video["datas"][objectId]
-    result = dumpBBOX(path,obj["startFrame"],obj["endFrame"],video["datas"][objectId]["frameData"])
-
-
 
 def get_chunk(filePath,byte1=None, byte2=None):
     full_path = filePath
@@ -123,6 +157,13 @@ def get_chunk(filePath,byte1=None, byte2=None):
 
 @app.route('/video')
 def get_file():
+    parameters = request.args.to_dict()
+    clientId = parameters["clientId"]
+    videoId = parameters["videoId"]
+    tubeDataManager = TubeDataManager()
+    client = ClientDB(clientId)
+    videoInfo = tubeDataManager.selectVideoInfo(videoId, client)
+    path = videoInfo["videoDirectory"]
     range_header = request.headers.get('Range', None)
     byte1, byte2 = 0, None
     if range_header:
@@ -134,34 +175,14 @@ def get_file():
         if groups[1]:
             byte2 = int(groups[1])
 
-    chunk, start, length, file_size = get_chunk("D:/pythonProjectC/test_data/carVideo.mp4",byte1, byte2)
-    resp = Response(chunk, 206, mimetype='video/mp4',
-                    content_type='video/mp4', direct_passthrough=True)
-    resp.headers.add('Content-Range', 'bytes {0}-{1}/{2}'.format(start, start + length - 1, file_size))
-    return resp
-
-@app.route('/video2')
-def get_file2():
-    range_header = request.headers.get('Range', None)
-    byte1, byte2 = 0, None
-    if range_header:
-        match = re.search(r'(\d+)-(\d*)', range_header)
-        groups = match.groups()
-
-        if groups[0]:
-            byte1 = int(groups[0])
-        if groups[1]:
-            byte2 = int(groups[1])
-
-    chunk, start, length, file_size = test("D:/pythonProjectC/test_data/longvideo.mp4",byte1, byte2)
+    chunk, start, length, file_size = get_chunk(path,byte1, byte2)
     resp = Response(chunk, 206, mimetype='video/mp4',
                     content_type='video/mp4', direct_passthrough=True)
     resp.headers.add('Content-Range', 'bytes {0}-{1}/{2}'.format(start, start + length - 1, file_size))
     return resp
 
 if __name__ == "__main__":
-    app.run(debug=True, host='localhost', port=8085)
-#<img src="{{ url_for('video') }}">
+    app.run(debug=True, host='0.0.0.0', port=8085)
 
 
 

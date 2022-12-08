@@ -1,4 +1,4 @@
-from flask import request, send_from_directory
+from flask import request, send_from_directory, redirect
 from werkzeug.utils import secure_filename
 import os
 import time
@@ -45,11 +45,11 @@ class TubeDataManager:
 
         f = request.files['file']
         f.save(savePath)
-        video = cv2.VideoCapture()
-        fps, f_count = video.get(cv2.CAP_PROP_FPS), video.get(cv2.CAP_PROP_FRAME_COUNT)
-        videoDao.insert([clientDB.Video(fps = fps,totalFrame=f_count,videoName=request.files['file'].filename, videoDirectory=savePath, clientId=clientId)])
+        video = cv2.VideoCapture(savePath)
+        fps, f_count,width,height = video.get(cv2.CAP_PROP_FPS), video.get(cv2.CAP_PROP_FRAME_COUNT),video.get(cv2.CAP_PROP_FRAME_WIDTH),video.get(cv2.CAP_PROP_FRAME_HEIGHT)
+        videoDao.insert([clientDB.Video(width=width,height=height,fps = fps,totalFrame=f_count,videoName=request.files['file'].filename, videoDirectory=savePath, clientId=clientId)])
         video.release()
-        return 'file uploaded successfully'
+        return redirect(request.referrer)
 
     def fileSender(self,videoId,clientDB):
         videoDao = clientDB.getVideoDao()
@@ -58,6 +58,33 @@ class TubeDataManager:
         BASE_DIR = os.path.dirname(path)
         FILE_NAME = os.path.basename(path)
         return send_from_directory(BASE_DIR,FILE_NAME)
+
+    def selectVideosInfo(self,clientDB):
+        videoDao = clientDB.getVideoDao()
+        videos = videoDao.selectAll()
+        videoDict = {}
+        for video in videos:
+            videoDict[video.id] = {}
+            videoDict[video.id]["videoName"] = video.videoName;
+            videoDict[video.id]["videoDiretory"] = video.videoDirectory;
+            videoDict[video.id]["fps"] = video.fps;
+            videoDict[video.id]["totalFrame"] = video.totalFrame;
+            videoDict[video.id]["width"] = video.width;
+            videoDict[video.id]["height"] = video.height;
+        return videoDict
+
+    def selectVideoInfo(self,videoId,clientDB):
+        videoDao = clientDB.getVideoDao()
+        video = videoDao.select(videoId)[0]
+        info = {}
+        info["videoName"] = video.videoName
+        info["videoDirectory"] = video.videoDirectory
+        info["fps"] = video.fps
+        info["totalFrame"] = video.totalFrame
+        info["width"] = video.width
+        info["height"] = video.height
+
+        return info
 
     def getVideoPath(self,videoId,clientDB):
         videoDao = clientDB.getVideoDao()

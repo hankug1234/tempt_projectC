@@ -11,12 +11,14 @@ class AnalysisManger():
         self.videoPath = None
     def filter(self,target,condition):
         for key in condition.keys():
+            if condition[key] == "all":
+                return True
             if target[key] != condition[key]:
                 return False
         return True
 
     def executeAnalysis(self,videoPath,conditions):
-        self.videoPaht = videoPath
+        self.videoPath = videoPath
         self.analysisCore.reset()
         executableCondition = {}
         conditionSet = set()
@@ -111,9 +113,9 @@ class AnalysisManger():
             result["datas"][obj.id] = {}
             result["datas"][obj.id]["className"] = str(obj.className)
             result["datas"][obj.id]["classColor"] = str(obj.classColor)
-            result["datas"][obj.id]["startFrame"] = str(obj.startFrame)
-            result["datas"][obj.id]["endFrame"] = str(obj.endFrame)
-            result["datas"][obj.id]["prob"] = str(obj.prob)
+            result["datas"][obj.id]["startFrame"] = obj.startFrame
+            result["datas"][obj.id]["endFrame"] = obj.endFrame
+            result["datas"][obj.id]["prob"] = obj.prob
             result["datas"][obj.id]["frameData"] = {}
 
         for frame in framedatas:

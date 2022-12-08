@@ -30,12 +30,13 @@
   "keyToString": {
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
-    "last_opened_file_path": "D:/pythonProjectC/test_data",
+    "last_opened_file_path": "D:/pythonProjectC/userVideos/hankug",
     "settings.editor.selected.configurable": "preferences.fileTypes"
   }
 }]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="D:\pythonProjectC\userVideos\hankug" />
       <recent name="D:\pythonProjectC\test_data" />
       <recent name="D:\pythonProjectC\static" />
       <recent name="D:\pythonProjectC\templates" />
@@ -192,7 +193,7 @@
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/projectCApp/analysisService/analysisModule/manager.py</url>
-          <line>81</line>
+          <line>83</line>
           <option name="timeStamp" value="4" />
         </line-breakpoint>
       </breakpoints>

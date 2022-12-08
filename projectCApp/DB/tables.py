@@ -30,6 +30,8 @@ def makeVideosTable(base,clientId_):
         clientId = Column(String(50),ForeignKey("clients.id",ondelete='CASCADE'))
         fps = Column(Float)
         totalFrame = Column(Float)
+        width = Column(Float)
+        height = Column(Float)
 
         client = relationship("Client",back_populates="video")
         object = relationship("Object",back_populates="video",cascade="all, delete-orphan")
