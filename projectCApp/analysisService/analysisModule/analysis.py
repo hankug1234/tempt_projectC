@@ -80,6 +80,9 @@ class AnalysisCore():
             for key in condition.keys():
                 model = condition[key][0]
                 for target in self.objectImage.keys():
+                    s = self.objectImage[target].shape
+                    if s[0] == 0 or s[1] == 0:
+                        continue
                     targetImage = cv2.resize(self.objectImage[target],dsize=condition[key][1],interpolation=cv2.INTER_LINEAR)
                     predict = model.predict(np.array([targetImage]))
                     result = np.argmax(predict)

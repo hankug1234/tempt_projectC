@@ -17,7 +17,9 @@ app.config['MAX_CONTENT_PATH'] = 1024*1024*1024
 api = Api(app)
 
 label_shape = ['Van', 'bus', 'compact', 'sedan', 'suv', 'truck']
+shapeDict = {'Van':0, 'bus':1, 'compact':2, 'sedan':3, 'suv':4, 'truck':5,'all':6}
 label_color = ['beige', 'black', 'blue', 'brown', 'red', 'silver', 'white', 'yellow' ]
+colorDict={'beige':0, 'black':1, 'blue':2, 'brown':3, 'red':4, 'silver':5, 'white':6, 'yellow':7,'all':-1}
 label = "car"
 label_num = 2
 
@@ -113,7 +115,7 @@ class DoAnalysis(Resource):
     def post(self,clientId,videoId):
         cars = request.form["cars"]
         colors = request.form["colors"]
-        condition = [{"shapes":cars},{"colors":colors}]
+        condition = [{"shape":shapeDict[cars]},{"color":colorDict[colors]}]
 
         client = ClientDB(clientId)
         analysisManager = AnalysisManger(client, analysisCore, {}, conditionLables)

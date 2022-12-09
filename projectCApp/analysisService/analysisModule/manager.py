@@ -11,7 +11,7 @@ class AnalysisManger():
         self.videoPath = None
     def filter(self,target,condition):
         for key in condition.keys():
-            if condition[key] == "all":
+            if condition[key] == -1:
                 return True
             if target[key] != condition[key]:
                 return False
@@ -37,9 +37,12 @@ class AnalysisManger():
                 self.matchedIdDict[key] = {}
 
         for key in results.keys():
+            count = 0
             for condition in conditions:
                 if self.filter(results[key],condition):
-                    self.matchedIdDict[key] = results[key]
+                    count +=1
+            if count == 2:
+                self.matchedIdDict[key] = results[key]
 
     def saveAnalysisData(self,videoId):
         objects = self.analysisCore.getObjects()

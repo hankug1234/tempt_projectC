@@ -69,7 +69,7 @@ def makeObjectFrameDatasTable(base,clientId):
         __tablename__ = f"{clientId}_objectFrameDatas"
         objectId = Column(Integer,primary_key=True)
         frameNum = Column(Integer,primary_key=True)
-        videoId = Column(Integer,ForeignKey(f"{clientId}_objects.id", ondelete='CASCADE'),primary_key=True)
+        videoId = Column(Integer,ForeignKey(f"{clientId}_objects.videoId", ondelete='CASCADE'),primary_key=True)
         x1 = Column(Integer)
         x2 = Column(Integer)
         y1 = Column(Integer)
