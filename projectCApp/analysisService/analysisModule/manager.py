@@ -1,4 +1,4 @@
-import tensorflow
+
 class AnalysisManger():
     def __init__(self,clientDB=None,analysisCore=None,conditionDict=None,conditionLabels=None):
         self.analysisCore = analysisCore
