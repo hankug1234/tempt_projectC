@@ -3,7 +3,6 @@ from projectCApp.analysisService.analysisModule.analysis import AnalysisCore
 from projectCApp.analysisService.analysisModule.manager import AnalysisManger
 from resource.modelFactory import YoloFactory
 import os
-import glob
 import tensorflow as tf
 from projectCApp.DB.daos import ClientDB
 import time
