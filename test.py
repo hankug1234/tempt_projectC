@@ -6,6 +6,7 @@ import os
 import tensorflow as tf
 from projectCApp.DB.daos import ClientDB
 import time
+import glob
 """
 remove_list = glob.glob("test_data/car_image/*")
 for file_path in remove_list:
